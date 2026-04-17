@@ -1,6 +1,9 @@
 <script setup>
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, useVueFlow } from '@vue-flow/core'
 import { computed } from 'vue'
+import { useStore } from '../stores/store'
+
+const store = useStore()
 
 const props = defineProps({
   id: {
@@ -41,9 +44,20 @@ const props = defineProps({
   },
 })
 
-// const { removeEdges } = useVueFlow()
+const { findEdge } = useVueFlow()
 
 const path = computed(() => getBezierPath(props))
+
+function addNode() {
+  const edge = findEdge(props.id)
+  if (edge) {
+    store.addNodeBetween({
+      ...edge,
+      centerX: path.value[1],
+      centerY: path.value[2],
+    })
+  }
+}
 </script>
 
 <script>
@@ -66,8 +80,7 @@ export default {
       }"
       class="nodrag nopan"
     >
-    <!--  @click="addNode()" -->
-      <button class="edgebutton">+</button>
+      <button class="edgebutton" @click="addNode()">+</button>
     </div>
   </EdgeLabelRenderer>
 </template>

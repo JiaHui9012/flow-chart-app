@@ -8,7 +8,7 @@ import { Handle, Position, EdgeLabelRenderer } from '@vue-flow/core'
 </script>
 
 <template>
-  <template v-if="type === 'add-node'">
+  <template v-if="type === 'addNode'">
     <!--  class="nodrag nopan" -->
       <div>
       <!--  @click="addNode()" -->
@@ -18,11 +18,10 @@ import { Handle, Position, EdgeLabelRenderer } from '@vue-flow/core'
   <template v-else>
     <div class="node">
       <div class="title">
-        <span v-if="type == 'trigger'">{{ 'A: ' }}</span>
+        <!-- <span v-if="type == 'trigger'">{{ 'A: ' }}</span> -->
         {{ data.title }}
       </div>
-      <div class="desc" v-if="data.description">
-        {{ data.description }}
+      <div class="desc" v-if="data.description" v-html="data.description">
       </div>
     </div>
   </template>

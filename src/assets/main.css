@@ -3,6 +3,7 @@
 @import 'https://cdn.jsdelivr.net/npm/@vue-flow/controls@latest/dist/style.css';
 @import 'https://cdn.jsdelivr.net/npm/@vue-flow/minimap@latest/dist/style.css';
 @import 'https://cdn.jsdelivr.net/npm/@vue-flow/node-resizer@latest/dist/style.css';
+@import "tailwindcss";
 
 html,
 body,
@@ -12,7 +13,7 @@ body,
 }
 
 #app {
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   font-family: 'JetBrains Mono', monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -78,24 +79,60 @@ body,
     fill:#fffffb
 }
 
-.vue-flow__node-trigger {
-  padding: 10px;
-  border-radius: 5px;
-  width: 150px;
-  font-size: 12px;
-  text-align: center;
-  border-width: 1px;
-  border-style: solid;
-  color: var(--vf-node-text);
-  background: var(--vf-node-bg);
-  border-color: var(--vf-node-color, #3c00ff);
+.vue-flow__node-trigger, 
+.vue-flow__node-dateTime, 
+.vue-flow__node-sendMessage, 
+.vue-flow__node-addComment {
+    border-radius: 5px;
+    width: 150px;
+    font-size: 12px;
+    text-align: center;
+    /* border-width: 1px;
+    border-style: solid; */
+    color: var(--vf-node-text);
+    background: var(--vf-node-bg);
+    /* border-color: var(--vf-node-color, #3c00ff); */
+    border: 1px solid #b5b5b5;
+    box-shadow: 0 1px 4px 1px rgba(0, 0, 0, 0.08);
 }
 
-.vue-flow__node-trigger:hover {
-  box-shadow: 0 1px 4px 1px rgba(0, 0, 0, 0.08);
+.vue-flow__node-dateTimeConnector {
+    width: auto;
+    border-radius: 5px;
+    font-size: 12px;
+    text-align: center;
+    color: #007bff;
+    background: #cfedff;
 }
 
+.vue-flow__node .title, .vue-flow__node .desc {
+    padding: 5px;
+}
+
+.vue-flow__node .title {
+    font-weight: bold;
+}
+
+.vue-flow__node .desc {
+    border-top: 1px solid #b5b5b5;
+}
+
+.vue-flow__node-trigger:hover,
 .vue-flow__node-trigger.selected {
-  outline: none;
-  border: 1px solid var(--vf-node-color, #00ffea)
+    border-color: #ea2264;
+}
+
+.vue-flow__node-dateTime:hover,
+.vue-flow__node-dateTime.selected {
+    border-color: #ff9142;
+}
+
+.vue-flow__node-sendMessage:hover,
+.vue-flow__node-sendMessage.selected {
+    border-color: #02b194;
+}
+
+.vue-flow__node-addComment:hover,
+.vue-flow__node-addComment.selected {
+    border-color: #3a98f7;
 }
