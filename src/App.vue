@@ -1,18 +1,30 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, markRaw } from 'vue'
+import { useRoute  } from 'vue-router'
+import { useStore } from './stores/store'
 import { Position, VueFlow, useVueFlow, MarkerType } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
+import { useQuery } from '@tanstack/vue-query'
+// import axios from 'axios'
+
 import CustomNode from './components/CustomNode.vue'
 import EdgeWithButton from './components/EdgeWithButton.vue'
-import { useQuery } from '@tanstack/vue-query'
-import axios from 'axios'
+import Drawer from './components/Drawer.vue'
 import payload from './data/payload.json'
-import { useStore } from './stores/store'
 
+const route = useRoute ()
 const store = useStore()
-
 const flow = useVueFlow()
 
+const nodeTypes = {
+  // output: CustomNode,
+  trigger: markRaw(CustomNode),
+  sendMessage: markRaw(CustomNode),
+  dateTime: markRaw(CustomNode),
+  dateTimeConnector: markRaw(CustomNode),
+  addComment: markRaw(CustomNode),
+  addNode: markRaw(CustomNode),
+}
 const fetchFlow = async () => {
   // const { data } = await axios.get('https://respond-io-fe-bucket.s3.ap-southeast-1.amazonaws.com/candidate-assessments/payload.json')
   // return data
@@ -31,84 +43,40 @@ watch(data, (val) => {
   }
 }, { immediate: true })
 
-// const nodes = ref([
-//   {
-//     id: 'n1',
-//     type: 'output',
-//     position: { x: 350, y: 10 },
-//     targetPosition: Position.Left,
-//     data : {
-//       title: 'abc',
-//       description: 'aabbcc',
-//     },
-//   },
-//   {
-//     id: 'add1',
-//     type: 'add-node',
-//     position: { x: 420, y: 100 },
-//     targetPosition: Position.Left,
-//     // data : {
-//     //   title: 'abc',
-//     //   description: 'aabbcc',
-//     // },
-//     style: { borderColor: 'orange' },
-//   },
-//   {
-//     id: 'n2',
-//     type: 'trigger',
-//     position: { x: 350, y: 160 },
-//     targetPosition: Position.Left,
-//     data : {
-//       title: 'tri',
-//       description: 'qwerrr',
-//     },
-//   },
-//   {
-//     id: 'add2',
-//     type: 'add-node',
-//     position: { x: 420, y: 250 },
-//     targetPosition: Position.Left,
-//     style: { borderColor: 'orange' },
-//   },
-// ])
-
-// const edges = ref([
-//   {
-//     id: 'n1-add1',
-//     source: 'n1',
-//     target: 'add1',
-//     // type: 'button',
-//     style: { stroke: 'orange' },
-//   },
-//   {
-//     id: 'add1-n2',
-//     source: 'add1',
-//     target: 'n2',
-//     // type: 'button',
-//     style: { stroke: 'orange' },
-//   },
-//   {
-//     id: 'n2-add2',
-//     source: 'n2',
-//     target: 'add2',
-//     // type: 'button',
-//     style: { stroke: 'orange' },
-//   },
-// ])
-
-const nodeTypes = {
-  // output: CustomNode,
-  trigger: CustomNode,
-  sendMessage: CustomNode,
-  dateTime: CustomNode,
-  dateTimeConnector: CustomNode,
-  addComment: CustomNode,
-  addNode: CustomNode,
-}
+watch(
+  () => route.query.nodeId,
+  (nodeId) => {
+    if (!nodeId) return
+    if(store.drawerToggle && store.selectedNode?.id === nodeId) return
+    const node = flow.findNode(String(nodeId))
+    if (node) {
+      store.drawDrawer(node)
+    }
+  },
+  { immediate: true }
+)
 
 flow.onInit((vueFlowInstance) => {
-  // instance is the same as the return of `useVueFlow`
   vueFlowInstance.fitView()
+})
+
+flow.onNodeClick(({ node }) => {
+  // console.log(node)
+  if(node.type === 'addNode') {
+    // store.addNode(node)
+  } else if(node.type === 'dateTimeConnector') {
+    store.closeDrawer()
+  } else {
+    store.drawDrawer(node)
+  }
+})
+
+flow.onPaneClick(() => {
+  store.closeDrawer()
+})
+
+flow.onEdgeClick(() => {
+  store.closeDrawer()
 })
 </script>
 
@@ -186,5 +154,7 @@ flow.onInit((vueFlowInstance) => {
 
     </div>
   </div>
+
+  <Drawer />
 </template>
 

@@ -18,7 +18,18 @@ import { Handle, Position, EdgeLabelRenderer } from '@vue-flow/core'
   <template v-else>
     <div class="node">
       <div class="title">
-        <!-- <span v-if="type == 'trigger'">{{ 'A: ' }}</span> -->
+        <template v-if="type === 'trigger'">
+          <i class="fa fa-bolt"></i>
+        </template>
+        <template v-else-if="type === 'sendMessage'">
+          <i class="fa fa-paper-plane-o"></i>
+        </template>
+        <template v-else-if="type === 'dateTime'">
+          <i class="fa fa-calendar"></i>
+        </template>
+        <template v-else-if="type === 'addComment'">
+          <i class="fa fa-commenting-o"></i>
+        </template>
         {{ data.title }}
       </div>
       <div class="desc" v-if="data.description" v-html="data.description">

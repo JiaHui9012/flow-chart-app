@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
-import { useVueFlow } from '@vue-flow/core'
-import { nextTick } from 'vue'
+// import { useVueFlow } from '@vue-flow/core'
+// import { nextTick } from 'vue'
+// import { useRouter } from 'vue-router'
+
+// const router = useRouter()
 
 export const useStore = defineStore('vue-flow-pinia', {
   state: () => ({
@@ -14,13 +17,14 @@ export const useStore = defineStore('vue-flow-pinia', {
       addComment: '#3a98f7',
     },
     showModal: false,
-    selectedNodeId: null as string | null,
-    selectedEdge: {} as any,
+    selectedNode: null as any,
+    selectedEdge: null as any,
     form: {
       type: '',
       title: '',
       description: '',
     },
+    drawerToggle: false,
   }),
 
   actions: {
@@ -186,13 +190,15 @@ export const useStore = defineStore('vue-flow-pinia', {
 
     addNodeBetween(edge: any) {
       this.selectedEdge = edge
-      this.selectedNodeId = null
+      this.selectedNode = null
       this.showModal = true
+      this.closeDrawer()
     },
-    addNode(nodeId: string) {
+    addNode(node: string) {
       this.selectedEdge = null
-      this.selectedNodeId = nodeId
+      this.selectedNode = node
       this.showModal = true
+      this.closeDrawer()
     },
     closeModal() {
       this.showModal = false
@@ -206,7 +212,7 @@ export const useStore = defineStore('vue-flow-pinia', {
         return
       }
 
-      const nodeId = this.selectedNodeId
+      const node = this.selectedNode
       const edge = this.selectedEdge
 
       if(edge) {
@@ -245,11 +251,11 @@ export const useStore = defineStore('vue-flow-pinia', {
               style: { stroke: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
             },
           ])
-      } else if(nodeId) {
+      } else if(node) {
         // // find connected edges
         // const edges = findEdge ()
-        // const incoming = edges.find((e: any) => e.target === nodeId)
-        // const outgoing = edges.find((e: any) => e.source === nodeId)
+        // const incoming = edges.find((e: any) => e.target === node)
+        // const outgoing = edges.find((e: any) => e.source === node)
 
         // if (!incoming || !outgoing) return
 
@@ -269,11 +275,11 @@ export const useStore = defineStore('vue-flow-pinia', {
         // ])
 
         // // 2. remove add-node placeholder
-        // removeNodes([nodeId])
+        // removeNodes([node])
 
         // // 3. remove old edges
         // const newEdges = edges.filter(
-        //   e => e.source !== nodeId && e.target !== nodeId
+        //   e => e.source !== node && e.target !== node
         // )
 
         // // 4. connect properly
@@ -294,6 +300,26 @@ export const useStore = defineStore('vue-flow-pinia', {
       }
 
       this.closeModal()
+    },
+    
+    drawDrawer(node: any) {
+      if(this.drawerToggle) {
+        if(this.selectedNode && this.selectedNode.id === node.id) {
+          this.closeDrawer()
+          return
+        }
+      }
+      this.drawerToggle = true
+      this.router.push({
+        query: { nodeId: node.id },
+      })
+      this.selectedNode = node
+    },
+    closeDrawer() {
+      this.drawerToggle = false
+      this.router.push({
+        query: {},
+      })
     },
   },
 })
