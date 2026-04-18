@@ -1,10 +1,16 @@
 <script setup>
-import { Handle, Position, EdgeLabelRenderer } from '@vue-flow/core'
-  defineProps({
+import { computed } from 'vue';
+// import { Handle, Position, EdgeLabelRenderer } from '@vue-flow/core'
+
+const props = defineProps({
   data: Object,
   type: String,
   style: Object,
 })
+
+const messageContent = computed(() => {
+  return props.data.payload?.find((p) => p.type === 'text')?.text;
+});
 </script>
 
 <template>
@@ -32,8 +38,19 @@ import { Handle, Position, EdgeLabelRenderer } from '@vue-flow/core'
         </template>
         {{ data.title }}
       </div>
-      <div class="desc" v-if="data.description" v-html="data.description">
-      </div>
+
+      <template v-if="type === 'dateTime'">
+        <div class="desc" v-if="data.timezone">{{ `${data.title} - ${data.timezone}` }}</div>
+      </template>
+      <template v-else-if="type === 'sendMessage'">
+        <div class="desc" v-if="messageContent" v-html="messageContent"></div>
+      </template>
+      <template v-else-if="type === 'addComment'">
+        <div class="desc" v-if="data.comment" v-html="data.comment"></div>
+      </template>
+      <template v-else>
+        <div class="desc" v-if="data.description" v-html="data.description"></div>
+      </template>
     </div>
   </template>
 </template>

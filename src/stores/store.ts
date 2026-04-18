@@ -138,23 +138,27 @@ export const useStore = defineStore('vue-flow-pinia', {
         switch (node.type) {
           case 'trigger':
             title = 'Trigger'
-            description = node.data?.type ?? ''
+            // description = node.data?.type ?? ''
+            description = node.description ?? 'Conversation Opened'
             break
 
           case 'sendMessage':
-            description =
-              node.data?.payload
-                ?.find((p: any) => p.type === 'text')
-                ?.text ?? ''
+            // description =
+            //   node.data?.payload
+            //     ?.find((p: any) => p.type === 'text')
+            //     ?.text ?? ''
+            description = node.description ?? 'Use it to display conversation message.'
             break
 
           case 'dateTime':
             title = node.name ?? 'Business Hours'
-            description = `${title} - ${node.data?.timezone ?? ''}`
+            // description = `${title} - ${node.data?.timezone ?? ''}`
+            description = node.description ?? 'Use it to show business hours or date range conditions.'
             break
 
           case 'addComment':
-            description = node.data?.comment ?? ''
+            // description = node.data?.comment ?? ''
+            description = node.description ?? 'Use it to add comment.'
             break
         }
 
