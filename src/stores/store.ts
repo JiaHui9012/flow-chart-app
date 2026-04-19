@@ -222,6 +222,7 @@ export const useStore = defineStore('vue-flow-pinia', {
         return
       }
 
+      const newId = `node-${Date.now()}`
       const node = this.selectedNode
       const edge = this.selectedEdge
       const daysOfWeek = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
@@ -239,8 +240,6 @@ export const useStore = defineStore('vue-flow-pinia', {
       }
 
       if(edge) {
-          const newId = `node-${Date.now()}`
-
           // remove old edge
           removeEdges(edge.id)
 
@@ -253,6 +252,39 @@ export const useStore = defineStore('vue-flow-pinia', {
               type: this.form.type,
             },
           ])
+
+          if(this.form.type === 'dateTime') {
+            addNodes([
+              {
+                id: `${newId}-c1`,
+                type: 'dateTimeConnector',
+                position: { x: edge.centerX - 150, y: edge.centerY + 100 },
+                data: {
+                  title: 'Success',
+                  connectorType: 'success'
+                },
+              },
+              {
+                id: `${newId}-c2`,
+                type: 'dateTimeConnector',
+                position: { x: edge.centerX - 250, y: edge.centerY + 100 },
+                data: {
+                  title: 'Failure',
+                  connectorType: 'failure'
+                },
+              },
+              {
+                id: `${newId}-c3`,
+                type: 'addNode',
+                position: { x: edge.centerX - 250, y: edge.centerY + 200 },
+              },
+              {
+                id: `${newId}-c4`,  
+                type: 'addNode',
+                position: { x: edge.centerX - 150, y: edge.centerY + 200 },
+              },
+            ])
+          }
 
           // add new edges
           addEdges([
@@ -271,8 +303,40 @@ export const useStore = defineStore('vue-flow-pinia', {
               style: { stroke: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
             },
           ])
+
+          if(this.form.type === 'dateTime') {
+            addEdges([
+              {
+                id: `${newId}-${newId}-c1`,
+                source: newId,
+                target: `${newId}-c1`,
+                type: undefined,
+                style: { stroke: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
+              },
+              {
+                id: `${newId}-${newId}-c2`,
+                source: newId,
+                target: `${newId}-c2`,
+                type: undefined,
+                style: { stroke: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
+              },
+              {
+                id: `${newId}-c1-${newId}-c4`,
+                source: `${newId}-c1`,
+                target: `${newId}-c4`,
+                type: undefined,
+                style: { stroke: '#b1b1b7', borderColor: '#b1b1b7' },
+              },
+              {
+                id: `${newId}-c2-${newId}-c3`,
+                source: `${newId}-c2`,
+                target: `${newId}-c3`,
+                type: undefined,
+                style: { stroke: '#b1b1b7', borderColor: '#b1b1b7' },
+              },
+            ])
+          }
       } else if(node) {
-        const newId = `node-${Date.now()}`
         // add new node
         addNodes([
           {
@@ -283,15 +347,43 @@ export const useStore = defineStore('vue-flow-pinia', {
           },
         ])
 
+        if(this.form.type === 'dateTime') {
+          addNodes([
+            {
+              id: `${newId}-c1`,
+              type: 'dateTimeConnector',
+              position: { x: node.position.x, y: node.position.y + 100 },
+              data: {
+                title: 'Success',
+                connectorType: 'success'
+              },
+            },
+            {
+              id: `${newId}-c2`,
+              type: 'dateTimeConnector',
+              position: { x: node.position.x + 100, y: node.position.y + 100 },
+              data: {
+                title: 'Failure',
+                connectorType: 'failure'
+              },
+            },
+            {
+              id: `${newId}-c3`,
+              type: 'addNode',
+              position: { x: node.position.x + 100, y: node.position.y + 150 },
+            },
+          ])
+        }
+        
         // reuse the addNode node by updating position
         updateNode(node.id, (node: any) => ({
-          position: { x: node.position.x, y: node.position.y + 100 }
+          position: { x: node.position.x, y: node.position.y + ((this.form.type === 'dateTime')? 150:100) }
         }))
 
+        // add edges
         // find connected edges
         const incoming = edges.value.find((e: any) => e.target === node.id)
         if (incoming) {
-          // add edges
           const sourceNode = findNode(incoming.source)
           addEdges([
             {
@@ -301,17 +393,42 @@ export const useStore = defineStore('vue-flow-pinia', {
               type: this.form.type !== 'dateTimeConnector' ? 'button' : undefined,
               style: { stroke: this.nodeTypeColors[sourceNode.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[sourceNode.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
             },
-            {
-              id: `${newId}-${node.id}`,
-              source: newId,
-              target: node.id,
-              type: incoming.type,
-              style: incoming.style,
-            },
           ])
 
           // remove edges
           removeEdges([incoming.id])
+        }
+        if(this.form.type === 'dateTime') {
+          addEdges([
+            {
+              id: `${newId}-${newId}-c1`,
+              source: newId,
+              target: `${newId}-c1`,
+              type: undefined,
+              style: { stroke: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
+            },
+            {
+              id: `${newId}-${newId}-c2`,
+              source: newId,
+              target: `${newId}-c2`,
+              type: undefined,
+              style: { stroke: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
+            },
+            {
+              id: `${newId}-c1-${node.id}`,
+              source: `${newId}-c1`,
+              target: node.id,
+              type: undefined,
+              style: { stroke: '#b1b1b7', borderColor: '#b1b1b7' },
+            },
+            {
+              id: `${newId}-c2-${newId}-c3`,
+              source: `${newId}-c2`,
+              target: `${newId}-c3`,
+              type: undefined,
+              style: { stroke: '#b1b1b7', borderColor: '#b1b1b7' },
+            },
+          ])
         } else {
           addEdges([
             {
