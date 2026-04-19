@@ -30,6 +30,16 @@ export const useStore = defineStore('vue-flow-pinia', {
   actions: {
     setFlow(data: any) {
       const newData = [...data]
+
+      if(newData.length === 0) {
+        newData.push({
+          id: `node-${Date.now()}-${Math.random()}`,
+          type: 'addNode',
+          parentId: '-1',
+          style: { borderColor: '#b1b1b7' }
+        })
+      }
+
       const childrenMap = new Map()
       // map parentId to children
       newData.forEach(node => {
@@ -43,7 +53,7 @@ export const useStore = defineStore('vue-flow-pinia', {
       const nodesToAdd: any[] = []
       newData.forEach(node => {
         const children = childrenMap.get(node.id.toString())
-        if (!children || children.length === 0) {
+        if ((!children || children.length === 0) && node.type !== 'addNode') {
           const newId = `node-${Date.now()}-${Math.random()}`
           nodesToAdd.push({
             id: newId,
@@ -214,6 +224,19 @@ export const useStore = defineStore('vue-flow-pinia', {
 
       const node = this.selectedNode
       const edge = this.selectedEdge
+      const daysOfWeek = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+      const data: any = { 
+        title: this.form.title,
+        description: this.form.description
+      }
+      if(this.form.type === 'dateTime') {
+        data.times = daysOfWeek.map(day => ({
+            day: day,
+            startTime: '00:00',
+            endTime: '00:00'
+        }));
+        data.timezone = 'UTC'
+      }
 
       if(edge) {
           const newId = `node-${Date.now()}`
@@ -222,19 +245,6 @@ export const useStore = defineStore('vue-flow-pinia', {
           removeEdges(edge.id)
 
           // add new node
-          const daysOfWeek = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-          const data: any = { 
-            title: this.form.title,
-            description: this.form.description
-          }
-          if(this.form.type === 'dateTime') {
-            data.times = daysOfWeek.map(day => ({
-                day: day,
-                startTime: '00:00',
-                endTime: '00:00'
-            }));
-            data.timezone = 'UTC'
-          }
           addNodes([
             {
               id: newId,
@@ -262,10 +272,6 @@ export const useStore = defineStore('vue-flow-pinia', {
             },
           ])
       } else if(node) {
-        // find connected edges
-        const incoming = edges.value.find((e: any) => e.target === node.id)
-        if (!incoming) return
-
         const newId = `node-${Date.now()}`
         // add new node
         addNodes([
@@ -273,10 +279,7 @@ export const useStore = defineStore('vue-flow-pinia', {
             id: newId,
             type: this.form.type,
             position: node.position,
-            data: {
-              title: this.form.title,
-              description: this.form.description,
-            },
+            data: data,
           },
         ])
 
@@ -285,27 +288,41 @@ export const useStore = defineStore('vue-flow-pinia', {
           position: { x: node.position.x, y: node.position.y + 100 }
         }))
 
-        // add edges
-        const sourceNode = findNode(incoming.source)
-        addEdges([
-          {
-            id: `${incoming.source}-${newId}`,
-            source: incoming.source,
-            target: newId,
-            type: this.form.type !== 'dateTimeConnector' ? 'button' : undefined,
-            style: { stroke: this.nodeTypeColors[sourceNode.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[sourceNode.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
-          },
-          {
-            id: `${newId}-${node.id}`,
-            source: newId,
-            target: node.id,
-            type: incoming.type,
-            style: incoming.style,
-          },
-        ])
+        // find connected edges
+        const incoming = edges.value.find((e: any) => e.target === node.id)
+        if (incoming) {
+          // add edges
+          const sourceNode = findNode(incoming.source)
+          addEdges([
+            {
+              id: `${incoming.source}-${newId}`,
+              source: incoming.source,
+              target: newId,
+              type: this.form.type !== 'dateTimeConnector' ? 'button' : undefined,
+              style: { stroke: this.nodeTypeColors[sourceNode.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[sourceNode.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
+            },
+            {
+              id: `${newId}-${node.id}`,
+              source: newId,
+              target: node.id,
+              type: incoming.type,
+              style: incoming.style,
+            },
+          ])
 
-        // remove edges
-        removeEdges([incoming.id])
+          // remove edges
+          removeEdges([incoming.id])
+        } else {
+          addEdges([
+            {
+              id: `${newId}-${node.id}`,
+              source: newId,
+              target: node.id,
+              type: undefined,
+              style: { stroke: '#b1b1b7', borderColor: '#b1b1b7' },
+            },
+          ])
+        }
       }
 
       this.closeModal()
