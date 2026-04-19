@@ -4,7 +4,7 @@ import { useVueFlow } from '@vue-flow/core'
 import { useStore } from '../stores/store'
 
 const store = useStore()
-const { updateNode } = useVueFlow()
+const flow = useVueFlow()
 const form = ref<any>(null)
 const editingTitle = ref<boolean>(false)
 const editingDescription = ref<boolean>(false)
@@ -31,7 +31,7 @@ watch(
   (newVal) => {
     if (!store.selectedNode || !newVal) return
 
-    updateNode(store.selectedNode.id, (node) => ({
+    flow.updateNode(store.selectedNode.id, (node) => ({
       ...node,
       data: newVal,
     }))
@@ -232,6 +232,14 @@ const removeAttachment = (index: number) => {
                         />
                     </div>
                 </template>
+            </div>
+            <div class="absolute bottom-4 right-4">
+                <button
+                    @click.stop="store.deleteNode(store.selectedNode, flow)"
+                    class="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 active:scale-95 transition"
+                >
+                    Delete
+                </button>
             </div>
         </div>
     </div>

@@ -327,6 +327,15 @@ export const useStore = defineStore('vue-flow-pinia', {
 
       this.closeModal()
     },
+    deleteNode(node: any, flow: any) {
+      const { removeEdges , removeNodes, getConnectedEdges } = flow
+      const connectedEdges = getConnectedEdges(node.id)
+      if(node.type === 'dateTime') {
+        const dateTimeConnectors = connectedEdges.filter((n: any) => n.source === node.id).map((m: any) => m.target);
+        removeNodes(dateTimeConnectors)
+      }
+      removeNodes([node])
+    },
     
     drawDrawer(node: any) {
       if(this.drawerToggle) {
