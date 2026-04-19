@@ -19,7 +19,9 @@ watch(
       form.value = null
       return
     }
-    form.value = JSON.parse(JSON.stringify(node.data))
+
+    const formData = JSON.parse(JSON.stringify(node.data))
+    form.value = formData
   },
   { immediate: true }
 )
@@ -124,7 +126,7 @@ const removeAttachment = (index: number) => {
                 </h3>
                 <template v-if="!editingDescription">
                     <p @click="editingDescription = true" class="cursor-pointer text-gray-600">
-                    {{ form.description }}
+                    {{ form.description || 'no description yet' }}
                     </p>
                 </template>
                 <template v-else>

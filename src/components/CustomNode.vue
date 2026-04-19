@@ -15,9 +15,7 @@ const messageContent = computed(() => {
 
 <template>
   <template v-if="type === 'addNode'">
-    <!--  class="nodrag nopan" -->
       <div>
-      <!--  @click="addNode()" -->
         <button :style="style" class="edgebutton">+</button>
       </div>
   </template>
@@ -76,10 +74,10 @@ const messageContent = computed(() => {
   white-space: pre-wrap;
 } */
 
-.edgebutton {
+/* .edgebutton {
   border-width: 1px;
   border-style: solid;
   border-radius: 10px;
   background: white;
-}
+} */
 </style>

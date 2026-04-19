@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, markRaw } from 'vue'
+import { ref, watch, computed, markRaw } from 'vue'
 import { useRoute  } from 'vue-router'
 import { useStore } from './stores/store'
 import { Position, VueFlow, useVueFlow, MarkerType } from '@vue-flow/core'
@@ -17,7 +17,6 @@ const store = useStore()
 const flow = useVueFlow()
 
 const nodeTypes = {
-  // output: CustomNode,
   trigger: markRaw(CustomNode),
   sendMessage: markRaw(CustomNode),
   dateTime: markRaw(CustomNode),
@@ -25,6 +24,13 @@ const nodeTypes = {
   addComment: markRaw(CustomNode),
   addNode: markRaw(CustomNode),
 }
+
+const addNodeTypes = [
+  'sendMessage',
+  'dateTime',
+  'addComment'
+]
+
 const fetchFlow = async () => {
   // const { data } = await axios.get('https://respond-io-fe-bucket.s3.ap-southeast-1.amazonaws.com/candidate-assessments/payload.json')
   // return data
@@ -63,7 +69,7 @@ flow.onInit((vueFlowInstance) => {
 flow.onNodeClick(({ node }) => {
   // console.log(node)
   if(node.type === 'addNode') {
-    // store.addNode(node)
+    store.addNode(node)
   } else if(node.type === 'dateTimeConnector') {
     store.closeDrawer()
   } else {
@@ -122,7 +128,7 @@ flow.onEdgeClick(() => {
         class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option disabled value="">Select type</option>
-        <option v-for=" key in Object.keys(nodeTypes).filter((i: any) => i !== 'addNode')" :value="key">{{ key }}</option>
+        <option v-for="key in addNodeTypes" :value="key">{{ key }}</option>
       </select>
 
       <input

@@ -136,3 +136,14 @@ body,
 .vue-flow__node-addComment.selected {
     border-color: #3a98f7;
 }
+
+.edgebutton {
+    width: 25px;
+    height: 25px;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 15px;
+    background: white;
+    border-color: #b1b1b7
+    /* font: -webkit-small-control; */
+}

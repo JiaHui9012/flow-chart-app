@@ -51,7 +51,7 @@ const path = computed(() => getBezierPath(props))
 function addNode() {
   const edge = findEdge(props.id)
   if (edge) {
-    store.addNodeBetween({
+    store.addNodeByEdge({
       ...edge,
       centerX: path.value[1],
       centerY: path.value[2],
@@ -80,7 +80,7 @@ export default {
       }"
       class="nodrag nopan"
     >
-      <button class="edgebutton" @click="addNode()">+</button>
+      <button class="edgebutton" :style="style" @click="addNode()">+</button>
     </div>
   </EdgeLabelRenderer>
 </template>

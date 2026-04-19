@@ -29,56 +29,44 @@ export const useStore = defineStore('vue-flow-pinia', {
 
   actions: {
     setFlow(data: any) {
-      this.nodes = this.transformToNodes(data)
-      this.edges = this.transformToEdges(data)
-      // console.log('nodes', this.nodes)
-      // console.log('edges', this.edges)
-    },
-    // transformToNodes(data: any) {
-    //   return data.map((item: any) => {
-    //     let title = item.name ?? 'Type: ' + item.type
-    //     let description = ''
-
-    //     switch (item.type) {
-    //       case 'trigger':
-    //         title = 'Trigger'
-    //         description = item.data?.type ?? ''
-    //         break
-    //       case 'sendMessage':
-    //         description = item.data?.payload?.find((p: any) => p.type === 'text')?.text ?? ''
-    //         break
-    //       case 'dateTime':
-    //         description = title + ' - ' + (item.data?.timezone ?? '')
-    //         break
-    //       case 'addComment':
-    //         description = item.data?.comment ?? ''
-    //         break
-    //       default:
-    //     }
-
-    //     return {
-    //       id: item.id.toString(),
-    //       type: item.type,
-    //       position: { x: 0, y: 0 },
-    //       data: {
-    //         ...item.data,
-    //         title,
-    //         description,
-    //       }
-    //     }
-    //   })
-    // },
-    transformToNodes(data: any[]) {
-      // map parentId to children
+      const newData = [...data]
       const childrenMap = new Map()
-      data.forEach(node => {
-        const parentId = node.parentId
+      // map parentId to children
+      newData.forEach(node => {
+        const parentId = node.parentId.toString()
         if (!childrenMap.has(parentId)) {
           childrenMap.set(parentId, [])
         }
-        childrenMap.get(parentId).push(node.id)
+        childrenMap.get(parentId).push(node.id.toString())
       })
 
+      const nodesToAdd: any[] = []
+      newData.forEach(node => {
+        const children = childrenMap.get(node.id.toString())
+        if (!children || children.length === 0) {
+          const newId = `node-${Date.now()}-${Math.random()}`
+          nodesToAdd.push({
+            id: newId,
+            type: 'addNode',
+            parentId: node.id,
+            style: {
+              borderColor:
+                node.type in this.nodeTypeColors
+                  ? this.nodeTypeColors[node.type as keyof typeof this.nodeTypeColors]
+                  : '#b1b1b7'
+            }
+          })
+          childrenMap.set(node.id.toString(), [newId])
+        }
+      })
+      newData.push(...nodesToAdd)
+
+      this.nodes = this.transformToNodes(newData, childrenMap)
+      this.edges = this.transformToEdges(this.nodes, childrenMap)
+      // console.log('nodes', this.nodes)
+      // console.log('edges', this.edges)
+    },
+    transformToNodes(data: any[], childrenMap: any) {
       const positions = new Map()
       const xSpacing = 280
       const ySpacing = 180
@@ -86,9 +74,9 @@ export const useStore = defineStore('vue-flow-pinia', {
 
       // calculate positions
       function dfs(nodeId: string, depth: number) {
-        let children = childrenMap.get(nodeId) || []
+        let children = childrenMap.get(nodeId.toString()) || []
 
-        // last node in the branch
+        // leaf node
         if (children.length === 0) {
           const pos = {
             x: leafX * xSpacing,
@@ -126,8 +114,10 @@ export const useStore = defineStore('vue-flow-pinia', {
       }
 
       // start calculating positions from root nodes (parentId === -1)
-      const root = data.find(n => n.parentId === -1)
-      if (root) dfs(root.id, 0)
+      const roots = data.filter(n => n.parentId === -1)
+      roots.forEach((root, index) => {
+        dfs(root.id, 0)
+      })
 
       return data.map(node => {
         const pos = positions.get(node.id) || { x: 0, y: 0 }
@@ -170,29 +160,35 @@ export const useStore = defineStore('vue-flow-pinia', {
             ...node.data,
             title,
             description
-          }
+          },
         }
       })
     },
-    transformToEdges(data: any) {
-      return data
-        .filter((item: any) => item.parentId !== -1)
-        .map((item: any) => {
-          const parentType = data.find((p: any) => p.id === item.parentId)?.type
-          const color = parentType && parentType in this.nodeTypeColors 
-            ? this.nodeTypeColors[parentType as keyof typeof this.nodeTypeColors]
-            : '#b1b1b7'
+    transformToEdges(data: any, childrenMap: any) {
+      return data.flatMap((item: any) => {
+        if (!childrenMap.has(item.id.toString())) return []
+
+        const children = childrenMap.get(item.id.toString()) || []
+        return children.map((childId: string) => {
+          const childType = data.find((p: any) => p.id === childId)?.type
+          let color = item.type && item.type in this.nodeTypeColors
+              ? this.nodeTypeColors[item.type as keyof typeof this.nodeTypeColors]
+              : '#b1b1b7'
+          if(childType === 'addNode') {
+            color = '#b1b1b7'
+          }
           return {
-            id: `${item.parentId}-${item.id}`,
-            source: item.parentId.toString(),
-            target: item.id.toString(),
-            type: item.type !== 'dateTimeConnector' ? 'button' : undefined,
-            style: { stroke: color },
+            id: `${item.id}-${childId}`,
+            source: item.id.toString(),
+            target: childId.toString(),
+            type: childType !== 'dateTimeConnector' && childType !== 'addNode' ? 'button' : undefined,
+            style: { stroke: color, borderColor: color }
           }
         })
+      })
     },
 
-    addNodeBetween(edge: any) {
+    addNodeByEdge(edge: any) {
       this.selectedEdge = edge
       this.selectedNode = null
       this.showModal = true
@@ -209,7 +205,7 @@ export const useStore = defineStore('vue-flow-pinia', {
       this.form = { type: '', title: '', description: '' }
     },
     createNode(flow: any) {
-      const { addNodes, addEdges, removeNodes, removeEdges , findEdge  } = flow
+      const { addNodes, addEdges, findNode, removeEdges , edges, updateNode  } = flow
 
       if(!this.form.type || !this.form.title) {
         alert('Please fill in the required fields: type and title.')
@@ -226,14 +222,24 @@ export const useStore = defineStore('vue-flow-pinia', {
           removeEdges(edge.id)
 
           // add new node
+          const daysOfWeek = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+          const data: any = { 
+            title: this.form.title,
+            description: this.form.description
+          }
+          if(this.form.type === 'dateTime') {
+            data.times = daysOfWeek.map(day => ({
+                day: day,
+                startTime: '00:00',
+                endTime: '00:00'
+            }));
+            data.timezone = 'UTC'
+          }
           addNodes([
             {
               id: newId,
               position: { x: edge.centerX - 90, y: edge.centerY - 30 },
-              data: { 
-                title: this.form.title,
-                description: this.form.description
-              },
+              data: data,
               type: this.form.type,
             },
           ])
@@ -252,55 +258,54 @@ export const useStore = defineStore('vue-flow-pinia', {
               source: newId,
               target: edge.target,
               type: edge.type,
-              style: { stroke: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
+              style: { stroke: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[this.form.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
             },
           ])
       } else if(node) {
-        // // find connected edges
-        // const edges = findEdge ()
-        // const incoming = edges.find((e: any) => e.target === node)
-        // const outgoing = edges.find((e: any) => e.source === node)
+        // find connected edges
+        const incoming = edges.value.find((e: any) => e.target === node.id)
+        if (!incoming) return
 
-        // if (!incoming || !outgoing) return
+        const newId = `node-${Date.now()}`
+        // add new node
+        addNodes([
+          {
+            id: newId,
+            type: this.form.type,
+            position: node.position,
+            data: {
+              title: this.form.title,
+              description: this.form.description,
+            },
+          },
+        ])
 
-        // const newId = `node-${Date.now()}`
+        // reuse the addNode node by updating position
+        updateNode(node.id, (node: any) => ({
+          position: { x: node.position.x, y: node.position.y + 100 }
+        }))
 
-        // // 1. add new node (replace add-node position)
-        // addNodes([
-        //   {
-        //     id: newId,
-        //     type: this.form.type,
-        //     position: incoming ? { ...incoming } : { x: 0, y: 0 }, // improve later
-        //     data: {
-        //       title: this.form.title,
-        //       description: this.form.description,
-        //     },
-        //   },
-        // ])
+        // add edges
+        const sourceNode = findNode(incoming.source)
+        addEdges([
+          {
+            id: `${incoming.source}-${newId}`,
+            source: incoming.source,
+            target: newId,
+            type: this.form.type !== 'dateTimeConnector' ? 'button' : undefined,
+            style: { stroke: this.nodeTypeColors[sourceNode.type as keyof typeof this.nodeTypeColors] || '#b1b1b7', borderColor: this.nodeTypeColors[sourceNode.type as keyof typeof this.nodeTypeColors] || '#b1b1b7' },
+          },
+          {
+            id: `${newId}-${node.id}`,
+            source: newId,
+            target: node.id,
+            type: incoming.type,
+            style: incoming.style,
+          },
+        ])
 
-        // // 2. remove add-node placeholder
-        // removeNodes([node])
-
-        // // 3. remove old edges
-        // const newEdges = edges.filter(
-        //   e => e.source !== node && e.target !== node
-        // )
-
-        // // 4. connect properly
-        // newEdges.push(
-        //   {
-        //     id: `${incoming.source}-${newId}`,
-        //     source: incoming.source,
-        //     target: newId,
-        //   },
-        //   {
-        //     id: `${newId}-${outgoing.target}`,
-        //     source: newId,
-        //     target: outgoing.target,
-        //   }
-        // )
-
-        // addEdges(newEdges)
+        // remove edges
+        removeEdges([incoming.id])
       }
 
       this.closeModal()
