@@ -206,7 +206,7 @@ const removeAttachment = (index: number) => {
                                     class="w-full h-full object-cover"
                                 />
                                 <button 
-                                    @click="removeAttachment(index)"
+                                    @click="removeAttachment(index as number)"
                                     class="absolute top-1 right-1 text-white rounded-full px-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                 >
                                     <i class="fa fa-times-circle-o"></i>
